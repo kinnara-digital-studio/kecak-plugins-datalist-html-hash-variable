@@ -40,23 +40,31 @@ public class DataListHtmlHashVariable extends DefaultHashVariablePlugin {
             final DataListCollection<Map<String, String>> rows = dataList.getRows();
 
             final String thTd = Arrays.stream(dataList.getColumns())
-                    .map(DataListColumn::getName)
-                    .map(s -> "<td>" + s + "</td>")
-                    .collect(Collectors.joining("", "<th>", "</th>"));
+                    .map(c -> {
+                        final String name = c.getName();
+                        final String label = c.getLabel();
+                        return "<td id='" + name + "' >" + label + "</td>";
+                    })
+                    .collect(Collectors.joining(""));
 
-            final String trTd =  Optional.ofNullable(rows)
+            final String trTd = Optional.ofNullable(rows)
                     .map(Collection::stream)
                     .orElseGet(Stream::empty)
                     .map(row -> {
-                        final String td = row.values().stream()
-                                .map(s -> "<td>" + s + "</td>")
+                        final String td = Arrays.stream(dataList.getColumns())
+                                .map(c -> {
+                                    final String name = c.getName();
+                                    final String label = c.getLabel();
+                                    final String value = row.getOrDefault(name, "");
+                                    return "<td id='" + name + "' data-label='" + label + "'>" + value + "</td>";
+                                })
                                 .collect(Collectors.joining());
                         return td;
                     })
                     .map(s -> "<tr>" + s + "</tr>")
                     .collect(Collectors.joining());
 
-            return "<table><thead>" + thTd + "</thead><tbody>" + trTd + "</tbody></table>";
+            return "<table id='" + dataListName + "'><thead>" + thTd + "</thead><tbody>" + trTd + "</tbody></table>";
         } catch (DataListHtmlException e) {
             return null;
         }
